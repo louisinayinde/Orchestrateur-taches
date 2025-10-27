@@ -78,9 +78,10 @@ tmp/
 temp/
 *.tmp
 
-docs/CONCURRENCY_GUIDE.md
-examples/README.md
+docs/*
+examples/*
 QUICKSTART.md
 PROJECT_SUMMARY.md
 TASKS.md
 BACKLOG.md
+SPRINT1_COMPLETE.md
