@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project specific
+jobs.db
+jobs.db-journal
+*.db
+*.db-journal
+config.yaml
+logs/
+*.log
+
+# Testing (si ajouté plus tard)
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+
+# Jupyter (si utilisé pour expérimentation)
+.ipynb_checkpoints/
+*.ipynb
+
+# Documentation build
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Environment variables
+.env
+.env.local
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+docs/CONCURRENCY_GUIDE.md
+examples/README.md
+QUICKSTART.md
+PROJECT_SUMMARY.md
+TASKS.md
+BACKLOG.md

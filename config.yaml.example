@@ -1,0 +1,73 @@
+# Configuration de l'Orchestrateur de Tâches
+# Copier ce fichier vers config.yaml et adapter selon vos besoins
+
+# Database
+database:
+  url: "sqlite:///jobs.db"
+  pool_size: 5
+  echo: false  # Set to true pour voir les queries SQL
+
+# Executors
+executors:
+  # AsyncExecutor (pour jobs I/O-bound)
+  async:
+    max_concurrent: 10
+    enabled: true
+  
+  # ThreadExecutor (pour jobs I/O légers)
+  thread:
+    pool_size: 5
+    enabled: true
+  
+  # ProcessExecutor (pour jobs CPU-bound)
+  process:
+    pool_size: null  # null = os.cpu_count()
+    enabled: true
+
+# Scheduler
+scheduler:
+  enabled: true
+  tick_seconds: 1  # Fréquence de vérification des schedules
+  max_instances: 3  # Nombre max d'instances d'un job en parallèle
+
+# Retry and Resilience
+resilience:
+  default_max_retries: 3
+  retry_backoff_base: 2.0  # Exponential backoff base (2^n seconds)
+  retry_backoff_max: 300   # Max wait time between retries (5 min)
+  default_timeout: 3600    # Default job timeout (1 hour)
+
+# Monitoring
+monitoring:
+  metrics:
+    enabled: true
+    port: 9090
+    host: "0.0.0.0"
+  
+  logging:
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    format: "json"  # json or text
+    file: null  # null = stdout only, or path like "logs/orchestrator.log"
+
+# Queue
+queue:
+  max_size: 1000  # Max jobs in queue
+  priority_enabled: false  # Priority queue (future feature)
+
+# Maintenance
+maintenance:
+  retention_days: 30  # Keep execution history for N days
+  cleanup_enabled: true
+  cleanup_schedule: "0 2 * * *"  # Cron: every day at 2 AM
+
+# API (future feature)
+api:
+  enabled: false
+  host: "0.0.0.0"
+  port: 8000
+
+# Security (future feature)
+security:
+  api_key_enabled: false
+  api_key: null
+

@@ -1,0 +1,36 @@
+# Orchestrateur de Tâches - Dependencies
+# Python >= 3.11
+
+# Core async and database
+aiosqlite==0.19.0          # SQLite async pour async executor
+python-dateutil==2.8.2     # Parsing dates et cron
+
+# Data validation and serialization
+pydantic==2.5.0            # Validation et serialization
+pydantic-settings==2.1.0   # Settings management
+
+# Monitoring and metrics
+prometheus-client==0.19.0  # Métriques Prometheus
+
+# Logging
+python-json-logger==2.0.7  # Structured logging
+
+# CLI
+click==8.1.7               # CLI framework moderne
+rich==13.7.0               # Beautiful terminal output
+
+# Scheduling (optionnel - peut faire custom)
+APScheduler==3.10.4        # Job scheduling
+
+# HTTP pour exemples
+aiohttp==3.9.1             # Async HTTP client
+httpx==0.25.2              # Modern HTTP client
+
+# Type checking and linting (dev)
+mypy==1.7.1
+ruff==0.1.8
+black==23.12.1
+
+# Utilities
+PyYAML==6.0.1              # Config files
+
