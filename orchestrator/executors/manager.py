@@ -1,0 +1,97 @@
+"""Gestionnaire d'executors.
+
+Ce module implémente un gestionnaire qui sélectionne et gère
+les différents types d'executors selon le type de job.
+"""
+
+from typing import TYPE_CHECKING
+
+from orchestrator.core.config import Config
+from orchestrator.core.job import JobType
+
+if TYPE_CHECKING:
+    from orchestrator.executors.base import BaseExecutor
+
+from orchestrator.executors.async_executor import AsyncExecutor
+from orchestrator.executors.sync_executor import SyncExecutor
+
+
+class ExecutorManager:
+    """Gestionnaire d'executors.
+    
+    Cette classe est responsable de la création et de la gestion
+    des différents types d'executors (Sync, Async, Thread, Process).
+    Elle sélectionne automatiquement le bon executor selon le type
+    de job à exécuter.
+    
+    Attributes:
+        config: Configuration de l'orchestrateur
+        sync_executor: Executor synchrone
+        async_executor: Executor asynchrone
+        _executors: Cache des executors par type
+    
+    Example:
+        >>> manager = ExecutorManager(config)
+        >>> executor = manager.get_executor(JobType.ASYNC)
+        >>> result = await executor.execute(job)
+    """
+    
+    def __init__(self, config: Config):
+        """Initialise le gestionnaire d'executors.
+        
+        Args:
+            config: Configuration de l'orchestrateur
+        """
+        self.config = config
+        
+        # Initialiser les executors
+        self.sync_executor = SyncExecutor()
+        self.async_executor = AsyncExecutor(max_concurrent=config.max_async_concurrent)
+        
+        # Cache pour les executors
+        self._executors: dict[JobType, "BaseExecutor"] = {
+            JobType.SYNC: self.sync_executor,
+            JobType.ASYNC: self.async_executor,
+        }
+    
+    def get_executor(self, job_type: JobType) -> "BaseExecutor":
+        """Retourne l'executor approprié pour un type de job.
+        
+        Args:
+            job_type: Le type de job (SYNC, ASYNC, THREAD, PROCESS)
+        
+        Returns:
+            L'executor approprié
+        
+        Raises:
+            ValueError: Si le type de job n'est pas supporté
+        
+        Example:
+            >>> executor = manager.get_executor(JobType.ASYNC)
+            >>> result = await executor.execute(job)
+        """
+        if job_type in self._executors:
+            return self._executors[job_type]
+        
+        # Les executors Thread et Process seront ajoutés au Sprint 3
+        if job_type == JobType.THREAD:
+            raise NotImplementedError(
+                "ThreadExecutor will be implemented in Sprint 3"
+            )
+        
+        if job_type == JobType.PROCESS:
+            raise NotImplementedError(
+                "ProcessExecutor will be implemented in Sprint 3"
+            )
+        
+        raise ValueError(f"Unknown job type: {job_type}")
+    
+    def shutdown_all(self) -> None:
+        """Arrête tous les executors proprement.
+        
+        Cette méthode doit être appelée à la fermeture de l'application
+        pour libérer toutes les ressources.
+        """
+        for executor in self._executors.values():
+            executor.shutdown()
+

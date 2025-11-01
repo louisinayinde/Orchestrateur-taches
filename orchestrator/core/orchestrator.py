@@ -7,11 +7,11 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+from orchestrator.core.config import Config
 from orchestrator.core.execution import Execution, ExecutionResult, ExecutionStatus
 from orchestrator.core.job import Job, JobType
 from orchestrator.db.repository import JobRepository
-from orchestrator.executors.base import BaseExecutor
-from orchestrator.executors.sync_executor import SyncExecutor
+from orchestrator.executors.manager import ExecutorManager
 from orchestrator.queue.task_queue import TaskQueue
 
 
@@ -25,9 +25,10 @@ class Orchestrator:
     
     Attributes:
         queue: File d'attente des jobs
-        executor: Exécuteur des jobs
+        executor_manager: Gestionnaire d'executors
         repository: Repository pour la persistance
         db_path: Chemin vers la base de données
+        config: Configuration de l'orchestrateur
     
     Example:
         >>> orch = Orchestrator()
@@ -36,15 +37,17 @@ class Orchestrator:
         >>> print(execution.result)
     """
     
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Optional[Path] = None, config: Optional[Config] = None):
         """Initialise l'orchestrateur.
         
         Args:
             db_path: Chemin vers la base de données (None = jobs.db dans le CWD)
+            config: Configuration de l'orchestrateur (None = config par défaut)
         """
         self.db_path = db_path or (Path.cwd() / "jobs.db")
+        self.config = config or Config()
         self.queue = TaskQueue()
-        self.executor = SyncExecutor()
+        self.executor_manager = ExecutorManager(self.config)
         self.repository = JobRepository(self.db_path)
     
     def add_job(
@@ -126,8 +129,11 @@ class Orchestrator:
             started_at=None  # Sera mis à jour après exécution
         )
         
+        # Obtenir l'executor approprié selon le type de job
+        executor = self.executor_manager.get_executor(job.job_type)
+        
         # Exécuter le job
-        result: ExecutionResult = await self.executor.execute(job)
+        result: ExecutionResult = await executor.execute(job)
         
         # Mettre à jour l'exécution
         execution.status = result.status
