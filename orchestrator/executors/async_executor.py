@@ -83,26 +83,53 @@ class AsyncExecutor(BaseExecutor):
                 # Vérifier si la fonction est async
                 is_async = inspect.iscoroutinefunction(job.function)
                 
-                if is_async:
-                    # Fonction async : l'exécuter directement
-                    result_value = await job.function(*job.args, **job.kwargs)
+                # Exécution avec timeout si spécifié
+                if job.timeout_seconds:
+                    if is_async:
+                        # Fonction async : utiliser asyncio.wait_for
+                        result_value = await asyncio.wait_for(
+                            job.function(*job.args, **job.kwargs),
+                            timeout=job.timeout_seconds
+                        )
+                    else:
+                        # Fonction sync : utiliser to_thread avec timeout
+                        try:
+                            result_value = await asyncio.wait_for(
+                                asyncio.to_thread(job.function, *job.args, **job.kwargs),
+                                timeout=job.timeout_seconds
+                            )
+                        except AttributeError:
+                            # Fallback pour Python < 3.9
+                            loop = asyncio.get_event_loop()
+                            result_value = await asyncio.wait_for(
+                                loop.run_in_executor(
+                                    None,
+                                    lambda: job.function(*job.args, **job.kwargs)
+                                ),
+                                timeout=job.timeout_seconds
+                            )
                 else:
-                    # Fonction sync : l'exécuter dans l'event loop
-                    # On utilise asyncio.to_thread() (Python 3.9+)
-                    # ou run_in_executor pour les versions antérieures
-                    try:
-                        result_value = await asyncio.to_thread(
-                            job.function,
-                            *job.args,
-                            **job.kwargs
-                        )
-                    except AttributeError:
-                        # Fallback pour Python < 3.9
-                        loop = asyncio.get_event_loop()
-                        result_value = await loop.run_in_executor(
-                            None,
-                            lambda: job.function(*job.args, **job.kwargs)
-                        )
+                    # Pas de timeout
+                    if is_async:
+                        # Fonction async : l'exécuter directement
+                        result_value = await job.function(*job.args, **job.kwargs)
+                    else:
+                        # Fonction sync : l'exécuter dans l'event loop
+                        # On utilise asyncio.to_thread() (Python 3.9+)
+                        # ou run_in_executor pour les versions antérieures
+                        try:
+                            result_value = await asyncio.to_thread(
+                                job.function,
+                                *job.args,
+                                **job.kwargs
+                            )
+                        except AttributeError:
+                            # Fallback pour Python < 3.9
+                            loop = asyncio.get_event_loop()
+                            result_value = await loop.run_in_executor(
+                                None,
+                                lambda: job.function(*job.args, **job.kwargs)
+                            )
                 
                 # Calculer la durée
                 duration = time.time() - start_time
@@ -113,6 +140,14 @@ class AsyncExecutor(BaseExecutor):
                     duration_seconds=duration
                 )
                 
+            except asyncio.TimeoutError:
+                # Timeout atteint
+                duration = time.time() - start_time
+                return ExecutionResult(
+                    status=ExecutionStatus.TIMEOUT,
+                    error=f"Job timed out after {job.timeout_seconds}s",
+                    duration_seconds=duration
+                )
             except Exception as e:
                 # Capture l'erreur et traceback
                 duration = time.time() - start_time

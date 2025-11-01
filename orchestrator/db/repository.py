@@ -421,4 +421,64 @@ class JobRepository:
         finally:
             cursor.close()
             conn.close()
+    
+    def find_idempotent_execution(self, idempotency_key: str) -> Optional[Execution]:
+        """Recherche une exécution réussie par clé d'idempotence.
+        
+        Args:
+            idempotency_key: La clé d'idempotence
+        
+        Returns:
+            L'exécution réussie ou None
+        
+        Note:
+            Recherche dans les jobs ayant cette idempotency_key
+        """
+        if not idempotency_key:
+            return None
+        
+        conn = get_connection(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            # Chercher un job avec cette clé
+            cursor.execute("SELECT id FROM jobs WHERE idempotency_key = ?", (idempotency_key,))
+            job_row = cursor.fetchone()
+            
+            if not job_row:
+                return None
+            
+            job_id = job_row[0]
+            
+            # Chercher une exécution réussie pour ce job
+            cursor.execute(
+                "SELECT * FROM executions WHERE job_id = ? AND status = ? ORDER BY completed_at DESC LIMIT 1",
+                (job_id, ExecutionStatus.SUCCESS.value)
+            )
+            exec_row = cursor.fetchone()
+            
+            if not exec_row:
+                return None
+            
+            # Reconstruire l'execution
+            started_at = datetime.fromisoformat(exec_row[4]) if exec_row[4] else None
+            completed_at = datetime.fromisoformat(exec_row[5]) if exec_row[5] else None
+            
+            execution = Execution(
+                id=exec_row[0],
+                job_id=exec_row[1],
+                status=ExecutionStatus(exec_row[2]),
+                attempt=exec_row[3],
+                started_at=started_at,
+                completed_at=completed_at,
+                duration_seconds=exec_row[6],
+                result=json.loads(exec_row[7]) if exec_row[7] else None,
+                error_message=exec_row[8],
+                traceback=exec_row[9]
+            )
+            
+            return execution
+        finally:
+            cursor.close()
+            conn.close()
 

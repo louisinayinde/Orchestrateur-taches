@@ -8,6 +8,7 @@ I/O-bound légères ou du code legacy non-async.
 import asyncio
 import time
 import traceback
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TYPE_CHECKING
 
@@ -87,6 +88,9 @@ class ThreadExecutor(BaseExecutor):
             # Soumettre dans un thread séparé pour éviter de bloquer
             def run_job():
                 future = self.executor.submit(job.function, *job.args, **job.kwargs)
+                # Si timeout, utiliser future.result(timeout)
+                if job.timeout_seconds:
+                    return future.result(timeout=job.timeout_seconds)
                 return future.result()
             
             result_value = await loop.run_in_executor(None, run_job)
@@ -100,6 +104,14 @@ class ThreadExecutor(BaseExecutor):
                 duration_seconds=duration
             )
             
+        except FuturesTimeoutError:
+            # Timeout atteint
+            duration = time.time() - start_time
+            return ExecutionResult(
+                status=ExecutionStatus.TIMEOUT,
+                error=f"Job timed out after {job.timeout_seconds}s",
+                duration_seconds=duration
+            )
         except Exception as e:
             # Capture l'erreur et traceback
             duration = time.time() - start_time

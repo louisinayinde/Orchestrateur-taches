@@ -14,9 +14,10 @@ from orchestrator.executors import (
     SyncExecutor,
     ThreadExecutor,
 )
+from orchestrator.resilience import IdempotencyManager, RecoveryManager, RetryStrategy
 from orchestrator.scheduler import COMMON_SCHEDULES, CronParser
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "Orchestrator",
@@ -32,5 +33,8 @@ __all__ = [
     "ProcessExecutor",
     "CronParser",
     "COMMON_SCHEDULES",
+    "RetryStrategy",
+    "IdempotencyManager",
+    "RecoveryManager",
 ]
 
