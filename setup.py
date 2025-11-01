@@ -20,7 +20,7 @@ if requirements_path.exists():
 
 setup(
     name="orchestrator-taches",
-    version="0.1.0",
+    version="0.5.0",
     author="Junior Developer",
     author_email="dev@example.com",
     description="Un orchestrateur de tâches async avec persistance et monitoring",
@@ -41,7 +41,7 @@ setup(
     install_requires=requirements,
     entry_points={
         "console_scripts": [
-            "orchestrator=orchestrator.cli.commands:main",
+            "orchestrator=orchestrator.cli.main:cli",
         ],
     },
     include_package_data=True,

@@ -4,6 +4,7 @@ Un système simple mais puissant pour orchestrer et exécuter des tâches Python
 avec support de la concurrence (asyncio, threading, multiprocessing).
 """
 
+from orchestrator.core.builder import JobBuilder, job
 from orchestrator.core.config import Config
 from orchestrator.core.execution import Execution, ExecutionResult, ExecutionStatus
 from orchestrator.core.job import Job, JobType
@@ -18,11 +19,13 @@ from orchestrator.monitoring import OrchestratorMetrics, configure_logger, get_l
 from orchestrator.resilience import IdempotencyManager, RecoveryManager, RetryStrategy
 from orchestrator.scheduler import COMMON_SCHEDULES, CronParser
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 __all__ = [
     "Orchestrator",
     "Job",
+    "JobBuilder",
+    "job",
     "JobType",
     "Execution",
     "ExecutionResult",
