@@ -167,4 +167,55 @@ class Orchestrator:
             Liste des exécutions
         """
         return self.repository.list_executions(job_id=job_id, limit=limit)
+    
+    def schedule_job(
+        self,
+        job_id: int,
+        cron_expression: Optional[str] = None,
+        run_at: Optional[str] = None,
+        enabled: bool = True
+    ) -> int:
+        """Planifie un job pour exécution répétée ou unique.
+        
+        Args:
+            job_id: ID du job à planifier
+            cron_expression: Expression cron (ex: "*/5 * * * *")
+            run_at: Date/heure ISO pour exécution unique (ex: "2024-01-01T12:00:00")
+            enabled: Si le schedule est actif (défaut: True)
+        
+        Returns:
+            L'ID du schedule créé
+        
+        Raises:
+            ValueError: Si ni cron ni run_at n'est fourni
+        
+        Example:
+            >>> job = orch.add_job(my_func, name="my_job")
+            >>> schedule_id = orch.schedule_job(job.id, cron_expression="*/5 * * * *")
+            >>> # Job planifié pour s'exécuter toutes les 5 minutes
+        """
+        from datetime import datetime
+        
+        # Convertir run_at si string
+        if run_at and isinstance(run_at, str):
+            run_at = datetime.fromisoformat(run_at)
+        
+        schedule_id = self.repository.create_schedule(
+            job_id=job_id,
+            cron_expression=cron_expression,
+            run_at=run_at,
+            enabled=enabled
+        )
+        return schedule_id
+    
+    def list_schedules(self, job_id: Optional[int] = None) -> list:
+        """Liste les schedules.
+        
+        Args:
+            job_id: Filtrer par job_id
+        
+        Returns:
+            Liste des schedules
+        """
+        return self.repository.list_schedules(job_id=job_id)
 

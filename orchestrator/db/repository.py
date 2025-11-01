@@ -309,4 +309,116 @@ class JobRepository:
         finally:
             cursor.close()
             conn.close()
+    
+    # ========================================================================
+    # CRUD pour les Schedules
+    # ========================================================================
+    
+    def create_schedule(
+        self,
+        job_id: int,
+        cron_expression: Optional[str] = None,
+        run_at: Optional[datetime] = None,
+        enabled: bool = True
+    ) -> int:
+        """Crée un schedule pour un job.
+        
+        Args:
+            job_id: ID du job à planifier
+            cron_expression: Expression cron (ex: "*/5 * * * *")
+            run_at: Date/heure d'exécution unique
+            enabled: Si le schedule est actif (défaut: True)
+        
+        Returns:
+            L'ID du schedule créé
+        
+        Raises:
+            ValueError: Si ni cron ni run_at n'est fourni
+        """
+        if not cron_expression and not run_at:
+            raise ValueError("Either cron_expression or run_at must be provided")
+        
+        conn = get_connection(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                INSERT INTO schedules (job_id, cron_expression, run_at, enabled)
+                VALUES (?, ?, ?, ?)
+            """, (
+                job_id,
+                cron_expression,
+                run_at.isoformat() if run_at else None,
+                1 if enabled else 0
+            ))
+            
+            schedule_id = cursor.lastrowid
+            conn.commit()
+            return schedule_id
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def list_schedules(self, job_id: Optional[int] = None, enabled: Optional[bool] = None) -> List[dict]:
+        """Liste les schedules avec filtres optionnels.
+        
+        Args:
+            job_id: Filtrer par job_id
+            enabled: Filtrer par état (True/False)
+        
+        Returns:
+            Liste des schedules
+        """
+        conn = get_connection(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            query = "SELECT id, job_id, cron_expression, run_at, enabled FROM schedules WHERE 1=1"
+            params = []
+            
+            if job_id:
+                query += " AND job_id = ?"
+                params.append(job_id)
+            
+            if enabled is not None:
+                query += " AND enabled = ?"
+                params.append(1 if enabled else 0)
+            
+            cursor.execute(query, tuple(params))
+            rows = cursor.fetchall()
+            
+            schedules = []
+            for row in rows:
+                schedules.append({
+                    "id": row[0],
+                    "job_id": row[1],
+                    "cron_expression": row[2],
+                    "run_at": row[3],
+                    "enabled": row[4]
+                })
+            
+            return schedules
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def delete_schedule(self, schedule_id: int) -> bool:
+        """Supprime un schedule.
+        
+        Args:
+            schedule_id: ID du schedule
+        
+        Returns:
+            True si supprimé, False si non trouvé
+        """
+        conn = get_connection(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("DELETE FROM schedules WHERE id = ?", (schedule_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+        finally:
+            cursor.close()
+            conn.close()
 
