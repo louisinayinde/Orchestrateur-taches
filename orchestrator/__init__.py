@@ -14,10 +14,11 @@ from orchestrator.executors import (
     SyncExecutor,
     ThreadExecutor,
 )
+from orchestrator.monitoring import OrchestratorMetrics, configure_logger, get_logger
 from orchestrator.resilience import IdempotencyManager, RecoveryManager, RetryStrategy
 from orchestrator.scheduler import COMMON_SCHEDULES, CronParser
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "Orchestrator",
@@ -36,5 +37,8 @@ __all__ = [
     "RetryStrategy",
     "IdempotencyManager",
     "RecoveryManager",
+    "OrchestratorMetrics",
+    "configure_logger",
+    "get_logger",
 ]
 

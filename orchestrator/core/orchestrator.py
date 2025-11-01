@@ -4,6 +4,7 @@ Ce module contient la classe Orchestrator qui orchestre l'exécution des jobs.
 """
 
 import json
+import time
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -12,6 +13,7 @@ from orchestrator.core.execution import Execution, ExecutionResult, ExecutionSta
 from orchestrator.core.job import Job, JobType
 from orchestrator.db.repository import JobRepository
 from orchestrator.executors.manager import ExecutorManager
+from orchestrator.monitoring.metrics import OrchestratorMetrics
 from orchestrator.queue.task_queue import TaskQueue
 
 
@@ -49,6 +51,7 @@ class Orchestrator:
         self.queue = TaskQueue()
         self.executor_manager = ExecutorManager(self.config)
         self.repository = JobRepository(self.db_path)
+        self.metrics = OrchestratorMetrics()
     
     def add_job(
         self,
@@ -129,11 +132,20 @@ class Orchestrator:
             started_at=None  # Sera mis à jour après exécution
         )
         
+        # Enregistrer le début d'exécution pour les métriques
+        start_time = time.time()
+        
         # Obtenir l'executor approprié selon le type de job
         executor = self.executor_manager.get_executor(job.job_type)
         
         # Exécuter le job
         result: ExecutionResult = await executor.execute(job)
+        
+        # Calculer la durée et enregistrer les métriques
+        duration = time.time() - start_time
+        status_str = result.status.value if hasattr(result.status, 'value') else str(result.status)
+        job_type_str = job.job_type.value if hasattr(job.job_type, 'value') else str(job.job_type)
+        self.metrics.record_job_execution(status_str, duration, job_type_str)
         
         # Mettre à jour l'exécution
         execution.status = result.status
