@@ -13,7 +13,9 @@ if TYPE_CHECKING:
     from orchestrator.executors.base import BaseExecutor
 
 from orchestrator.executors.async_executor import AsyncExecutor
+from orchestrator.executors.process_executor import ProcessExecutor
 from orchestrator.executors.sync_executor import SyncExecutor
+from orchestrator.executors.thread_executor import ThreadExecutor
 
 
 class ExecutorManager:
@@ -47,11 +49,15 @@ class ExecutorManager:
         # Initialiser les executors
         self.sync_executor = SyncExecutor()
         self.async_executor = AsyncExecutor(max_concurrent=config.max_async_concurrent)
+        self.thread_executor = ThreadExecutor(pool_size=config.thread_pool_size)
+        self.process_executor = ProcessExecutor(pool_size=config.process_pool_size)
         
         # Cache pour les executors
         self._executors: dict[JobType, "BaseExecutor"] = {
             JobType.SYNC: self.sync_executor,
             JobType.ASYNC: self.async_executor,
+            JobType.THREAD: self.thread_executor,
+            JobType.PROCESS: self.process_executor,
         }
     
     def get_executor(self, job_type: JobType) -> "BaseExecutor":
@@ -72,17 +78,6 @@ class ExecutorManager:
         """
         if job_type in self._executors:
             return self._executors[job_type]
-        
-        # Les executors Thread et Process seront ajoutés au Sprint 3
-        if job_type == JobType.THREAD:
-            raise NotImplementedError(
-                "ThreadExecutor will be implemented in Sprint 3"
-            )
-        
-        if job_type == JobType.PROCESS:
-            raise NotImplementedError(
-                "ProcessExecutor will be implemented in Sprint 3"
-            )
         
         raise ValueError(f"Unknown job type: {job_type}")
     
