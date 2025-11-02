@@ -20,7 +20,7 @@ if requirements_path.exists():
 
 setup(
     name="orchestrator-taches",
-    version="0.5.0",
+    version="1.0.0",
     author="Junior Developer",
     author_email="dev@example.com",
     description="Un orchestrateur de tâches async avec persistance et monitoring",

@@ -19,7 +19,7 @@ from orchestrator.monitoring import OrchestratorMetrics, configure_logger, get_l
 from orchestrator.resilience import IdempotencyManager, RecoveryManager, RetryStrategy
 from orchestrator.scheduler import COMMON_SCHEDULES, CronParser
 
-__version__ = "0.5.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "Orchestrator",
